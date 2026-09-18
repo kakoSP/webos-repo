@@ -1,10 +1,9 @@
-
 name: Update repo.json automatically
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Executa automaticamente todos os dias à meia-noite
-  workflow_dispatch: # Permite executar manualmente a partir do painel do GitHub
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   update:
@@ -55,7 +54,7 @@ jobs:
               with open(repo_path, "r") as f:
                   repo_data = json.load(f)
           else:
-              repo_data = {"packages": [{"id": "youtube.leanback.v4", "title": "YouTube Cobalt AdFree", "shortDescription": "YouTube TV with ad blocking and SponsorBlock support.", "iconUri": "https://raw.githubusercontent.com/RF1705/youtube-webos-cobalt-adfree/main/assets/largeIcon.png", "manifest": {"id": "youtube.leanback.v4", "type": "native", "title": "YouTube Cobalt AdFree", "iconUri": "https://raw.githubusercontent.com/RF1705/youtube-webos-cobalt-adfree/main/assets/largeIcon.png", "sourceUrl": "https://github.com/RF1705/youtube-webos-cobalt-adfree", "rootRequired": false}}]}
+              repo_data = {"packages": [{"id": "youtube.leanback.v4", "title": "YouTube Cobalt AdFree", "shortDescription": "YouTube TV with ad blocking and SponsorBlock support.", "iconUri": "https://raw.githubusercontent.com/RF1705/youtube-webos-cobalt-adfree/main/assets/largeIcon.png", "manifest": {"id": "youtube.leanback.v4", "type": "native", "title": "YouTube Cobalt AdFree", "iconUri": "https://raw.githubusercontent.com/RF1705/youtube-webos-cobalt-adfree/main/assets/largeIcon.png", "sourceUrl": "https://github.com/RF1705/youtube-webos-cobalt-adfree", "rootRequired": False}}]}
 
           current_version = repo_data["packages"][0]["manifest"].get("version", "0.0.0")
 
@@ -95,4 +94,4 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add repo.json
-          git diff --quiet && git diff --cached --quiet || (git commit -m "Auto-update to latest release v${{ steps.version.outputs.version }}" && git push)
+          git diff --quiet && git diff --cached --quiet || (git commit -m "Auto-update to latest release" && git push)
