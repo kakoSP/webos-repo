@@ -1,0 +1,98 @@
+
+name: Update repo.json automatically
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Executa automaticamente todos os dias à meia-noite
+  workflow_dispatch: # Permite executar manualmente a partir do painel do GitHub
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          
+      - name: Run update script
+        run: |
+          python -c '
+          import json
+          import urllib.request
+          import hashlib
+          import os
+
+          api_url = "https://api.github.com/repos/RF1705/youtube-webos-cobalt-adfree/releases/latest"
+          req = urllib.request.Request(api_url, headers={"User-Agent": "Mozilla/5.0"})
+          
+          try:
+              with urllib.request.urlopen(req) as response:
+                  data = json.loads(response.read().decode())
+          except Exception as e:
+              print(f"Erro ao buscar API: {e}")
+              exit(0)
+
+          latest_tag = data["tag_name"]
+          clean_version = latest_tag.lstrip("v")
+          
+          ipk_url = ""
+          for asset in data.get("assets", []):
+              if asset["name"].endswith(".ipk"):
+                  ipk_url = asset["browser_download_url"]
+                  break
+          
+          if not ipk_url:
+              print("Nenhum IPK encontrado na release.")
+              exit(0)
+
+          repo_path = "repo.json"
+          if os.path.exists(repo_path):
+              with open(repo_path, "r") as f:
+                  repo_data = json.load(f)
+          else:
+              repo_data = {"packages": [{"id": "youtube.leanback.v4", "title": "YouTube Cobalt AdFree", "shortDescription": "YouTube TV with ad blocking and SponsorBlock support.", "iconUri": "https://raw.githubusercontent.com/RF1705/youtube-webos-cobalt-adfree/main/assets/largeIcon.png", "manifest": {"id": "youtube.leanback.v4", "type": "native", "title": "YouTube Cobalt AdFree", "iconUri": "https://raw.githubusercontent.com/RF1705/youtube-webos-cobalt-adfree/main/assets/largeIcon.png", "sourceUrl": "https://github.com/RF1705/youtube-webos-cobalt-adfree", "rootRequired": false}}]}
+
+          current_version = repo_data["packages"][0]["manifest"].get("version", "0.0.0")
+
+          if current_version == clean_version:
+              print("O repositório já está na versão mais recente.")
+              exit(0)
+
+          print(f"Nova versão detetada: {clean_version} (Atual: {current_version}). A atualizar...")
+
+          ipk_filename = "temp.ipk"
+          urllib.request.urlretrieve(ipk_url, ipk_filename)
+
+          file_size = os.path.getsize(ipk_filename)
+          
+          sha256_hash = hashlib.sha256()
+          with open(ipk_filename, "rb") as f:
+              for byte_block in iter(lambda: f.read(4096), b""):
+                  sha256_hash.update(byte_block)
+          file_hash = sha256_hash.hexdigest()
+
+          os.remove(ipk_filename)
+
+          manifest = repo_data["packages"][0]["manifest"]
+          manifest["version"] = clean_version
+          manifest["ipkUrl"] = ipk_url
+          manifest["ipkHash"] = {"sha256": file_hash}
+          manifest["ipkSize"] = file_size
+
+          with open(repo_path, "w") as f:
+              json.dump(repo_data, f, indent=2)
+          
+          print("repo.json atualizado com sucesso!")
+          '
+          
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add repo.json
+          git diff --quiet && git diff --cached --quiet || (git commit -m "Auto-update to latest release v${{ steps.version.outputs.version }}" && git push)
