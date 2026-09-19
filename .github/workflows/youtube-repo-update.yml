@@ -1,4 +1,4 @@
-name: Update repo.json automatically
+name: Update youtube-repo.json automatically
 
 on:
   schedule:
@@ -49,7 +49,7 @@ jobs:
               print("Nenhum IPK encontrado na release.")
               exit(0)
 
-          repo_path = "repo.json"
+          repo_path = "youtube-repo.json"
           if os.path.exists(repo_path):
               with open(repo_path, "r") as f:
                   repo_data = json.load(f)
@@ -86,7 +86,7 @@ jobs:
           with open(repo_path, "w") as f:
               json.dump(repo_data, f, indent=2)
           
-          print("repo.json atualizado com sucesso!")
+          print("youtube-repo.json atualizado com sucesso!")
           '
           
       - name: Commit and push changes
