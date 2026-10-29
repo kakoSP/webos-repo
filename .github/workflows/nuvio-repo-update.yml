@@ -1,0 +1,129 @@
+name: Update nuvio-repo.json automatically
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          
+      - name: Run update script
+        run: |
+          python -c '
+          import json
+          import urllib.request
+          import hashlib
+          import os
+
+          # Atualizado para buscar do NuvioTVSmart
+          api_url = "https://api.github.com/repos/NuvioMedia/NuvioTVSmart/releases/latest"
+          req = urllib.request.Request(api_url, headers={"User-Agent": "Mozilla/5.0"})
+          
+          try:
+              with urllib.request.urlopen(req) as response:
+                  data = json.loads(response.read().decode())
+          except Exception as e:
+              print(f"Erro ao buscar API: {e}")
+              exit(0)
+
+          latest_tag = data["tag_name"]
+          clean_version = latest_tag.lstrip("v")
+          
+          ipk_url = ""
+          for asset in data.get("assets", []):
+              if asset["name"].endswith(".ipk"):
+                  ipk_url = asset["browser_download_url"]
+                  break
+          
+          if not ipk_url:
+              print("Nenhum IPK encontrado na release.")
+              exit(0)
+
+          repo_path = "nuvio-repo.json"
+          if os.path.exists(repo_path):
+              with open(repo_path, "r") as f:
+                  repo_data = json.load(f)
+          else:
+              # Estrutura adaptada para o NuvioTVSmart
+              repo_data = {
+                  "packages": [{
+                      "id": "nuviomedia.tv.smart",
+                      "title": "Nuvio TV Smart",
+                      "shortDescription": "Nuvio TV Smart application for WebOS.",
+                      "iconUri": "https://raw.githubusercontent.com/NuvioMedia/NuvioTVSmart/main/assets/largeIcon.png",
+                      "manifest": {
+                          "id": "nuviomedia.tv.smart",
+                          "type": "native",
+                          "title": "Nuvio TV Smart",
+                          "iconUri": "https://raw.githubusercontent.com/NuvioMedia/NuvioTVSmart/main/assets/largeIcon.png",
+                          "sourceUrl": "https://github.com/NuvioMedia/NuvioTVSmart",
+                          "rootRequired": False
+                      }
+                  }]
+              }
+
+          current_version = repo_data["packages"][0]["manifest"].get("version", "0.0.0")
+
+          if current_version == clean_version:
+              print("O repositório já está na versão mais recente.")
+              exit(0)
+
+          print(f"Nova versão detetada: {clean_version} (Atual: {current_version}). A atualizar...")
+
+          ipk_filename = "temp.ipk"
+          urllib.request.urlretrieve(ipk_url, ipk_filename)
+
+          file_size = os.path.getsize(ipk_filename)
+          
+          sha256_hash = hashlib.sha256()
+          with open(ipk_filename, "rb") as f:
+              for byte_block in iter(lambda: f.read(4096), b""):
+                  sha256_hash.update(byte_block)
+          file_hash = sha256_hash.hexdigest()
+
+          os.remove(ipk_filename)
+
+          manifest = repo_data["packages"][0]["manifest"]
+          manifest["version"] = clean_version
+          manifest["ipkUrl"] = ipk_url
+          manifest["ipkHash"] = {"sha256": file_hash}
+          manifest["ipkSize"] = file_size
+
+          with open(repo_path, "w") as f:
+              json.dump(repo_data, f, indent=2)
+          
+          with open("version.txt", "w") as f:
+              f.write(clean_version)
+
+          print("nuvio-repo.json atualizado com sucesso!")
+          '
+          
+      - name: Commit and push changes
+        run: |
+          if [ -f version.txt ]; then
+            VERSION=$(cat version.txt)
+            rm version.txt
+          else
+            VERSION="desconhecida"
+          fi
+          
+          TIMESTAMP=$(TZ="America/Sao_Paulo" date +"%d/%m/%Y %H:%M")
+          
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add nuvio-repo.json
+          
+          COMMIT_MSG="v${VERSION} - ${TIMESTAMP}"
+          
+          git diff --quiet && git diff --cached --quiet || (git commit -m "$COMMIT_MSG" && git push)
