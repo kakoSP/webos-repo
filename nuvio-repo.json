@@ -1,0 +1,24 @@
+{
+  "packages": [
+    {
+      "id": "nuviomedia.tv.smart",
+      "title": "Nuvio TV Smart",
+      "shortDescription": "Nuvio TV Smart application for WebOS.",
+      "iconUri": "https://raw.githubusercontent.com/NuvioMedia/NuvioTVSmart/main/assets/largeIcon.png",
+      "manifest": {
+        "id": "nuviomedia.tv.smart",
+        "type": "native",
+        "title": "Nuvio TV Smart",
+        "iconUri": "https://raw.githubusercontent.com/NuvioMedia/NuvioTVSmart/main/assets/largeIcon.png",
+        "sourceUrl": "https://github.com/NuvioMedia/NuvioTVSmart",
+        "rootRequired": false,
+        "version": "1.2.10",
+        "ipkUrl": "https://github.com/NuvioMedia/NuvioTVSmart/releases/download/1.2.10/NuvioTV-webOS-1.2.10.ipk",
+        "ipkHash": {
+          "sha256": "d0b4d647a3420f571ef2b2df7568a927a1accd03321d042ef36a24d6df73ab9b"
+        },
+        "ipkSize": 7745676
+      }
+    }
+  ]
+}
