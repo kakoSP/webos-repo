@@ -12,12 +12,12 @@
         "iconUri": "https://raw.githubusercontent.com/NuvioMedia/NuvioTVSmart/main/assets/largeIcon.png",
         "sourceUrl": "https://github.com/NuvioMedia/NuvioTVSmart",
         "rootRequired": false,
-        "version": "1.4.6",
-        "ipkUrl": "https://github.com/NuvioMedia/NuvioTVSmart/releases/download/1.4.6/NuvioTV-webOS-1.4.6.ipk",
+        "version": "1.4.8",
+        "ipkUrl": "https://github.com/NuvioMedia/NuvioTVSmart/releases/download/1.4.8/NuvioTV-webOS-1.4.8.ipk",
         "ipkHash": {
-          "sha256": "fdc1d0496ed022c2e2212688fc21a94aaf1aeac9f18db78b9f7b4f5863ad5ff7"
+          "sha256": "a574266ee1d2c3cc598afdf7990c08076ddf81f24f46fe00c0601da09f2a6b66"
         },
-        "ipkSize": 8460372
+        "ipkSize": 8471826
       }
     }
   ]
